@@ -136,7 +136,7 @@ export default function Dashboard() {
                 <CalendarIcon className="w-3.5 h-3.5 text-zinc-500 mr-2" />
                 <SelectValue placeholder="Alle maanden" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0F0F11] border-[#27272A]">
+              <SelectContent className="bg-[#0F0F11] border-[#27272A] z-[100]">
                 <SelectItem value="all">Alle maanden</SelectItem>
                 {(s.available_months || []).map(m => (
                   <SelectItem key={m} value={m}>{m}</SelectItem>
@@ -149,7 +149,7 @@ export default function Dashboard() {
                 <Users className="w-3.5 h-3.5 text-zinc-500 mr-2" />
                 <SelectValue placeholder="Alle klanten" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0F0F11] border-[#27272A]">
+              <SelectContent className="bg-[#0F0F11] border-[#27272A] z-[100]">
                 <SelectItem value="all">Alle klanten</SelectItem>
                 {(s.available_clients || []).map(c => (
                   <SelectItem key={c} value={c}>{c}</SelectItem>
@@ -162,7 +162,7 @@ export default function Dashboard() {
                 <CarIcon className="w-3.5 h-3.5 text-zinc-500 mr-2" />
                 <SelectValue placeholder="Alle merken" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0F0F11] border-[#27272A]">
+              <SelectContent className="bg-[#0F0F11] border-[#27272A] z-[100]">
                 <SelectItem value="all">Alle merken</SelectItem>
                 {(s.available_brands || []).map(b => (
                   <SelectItem key={b} value={b}>{b}</SelectItem>
