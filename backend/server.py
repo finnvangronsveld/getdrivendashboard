@@ -206,10 +206,13 @@ async def create_ride(ride: RideInput, current_user: dict = Depends(get_current_
     # WWV reimbursement
     wwv_amount = round(ride.wwv_km * settings.get("wwv_rate", 0.26), 2)
 
-    # Social contribution
+    # Bruto = uurloon + WWV + extra kosten + sociale bijdrage
+    # Netto = Bruto - sociale bijdrage
+    wage_pay = salary["gross_pay"]  # normal + overtime + night
     social_pct = settings.get("social_contribution_pct", 2.71) / 100
-    social_contribution = round(salary["gross_pay"] * social_pct, 2)
-    net_pay = round(salary["gross_pay"] - social_contribution + wwv_amount + ride.extra_costs, 2)
+    social_contribution = round(wage_pay * social_pct, 2)
+    gross_total = round(wage_pay + wwv_amount + ride.extra_costs + social_contribution, 2)
+    net_pay = round(gross_total - social_contribution, 2)
 
     ride_id = str(uuid.uuid4())
     ride_doc = {
@@ -226,6 +229,7 @@ async def create_ride(ride: RideInput, current_user: dict = Depends(get_current_
         "wwv_amount": wwv_amount,
         "notes": ride.notes,
         **salary,
+        "gross_total": gross_total,
         "social_contribution": social_contribution,
         "net_pay": net_pay,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -258,9 +262,11 @@ async def update_ride(ride_id: str, ride: RideInput, current_user: dict = Depend
 
     salary = calculate_salary(ride.start_time, ride.end_time, ride.date, settings)
     wwv_amount = round(ride.wwv_km * settings.get("wwv_rate", 0.26), 2)
+    wage_pay = salary["gross_pay"]
     social_pct = settings.get("social_contribution_pct", 2.71) / 100
-    social_contribution = round(salary["gross_pay"] * social_pct, 2)
-    net_pay = round(salary["gross_pay"] - social_contribution + wwv_amount + ride.extra_costs, 2)
+    social_contribution = round(wage_pay * social_pct, 2)
+    gross_total = round(wage_pay + wwv_amount + ride.extra_costs + social_contribution, 2)
+    net_pay = round(gross_total - social_contribution, 2)
 
     update_doc = {
         "date": ride.date,
@@ -274,6 +280,7 @@ async def update_ride(ride_id: str, ride: RideInput, current_user: dict = Depend
         "wwv_amount": wwv_amount,
         "notes": ride.notes,
         **salary,
+        "gross_total": gross_total,
         "social_contribution": social_contribution,
         "net_pay": net_pay,
     }
