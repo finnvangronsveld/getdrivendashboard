@@ -351,6 +351,17 @@ async def get_stats(
     # Also get ALL rides for global stats (filters, unique values)
     all_rides = await db.rides.find({"user_id": user_id}, {"_id": 0}).to_list(5000)
 
+    # Helper: compute gross_total for rides that may not have it
+    def get_gross_total(r):
+        if "gross_total" in r:
+            return r["gross_total"]
+        # Recalculate: bruto = uurloon + wwv + extra + social
+        wage = r.get("gross_pay", 0)
+        wwv = r.get("wwv_amount", 0)
+        extra = r.get("extra_costs", 0)
+        social = r.get("social_contribution", 0)
+        return wage + wwv + extra + social
+
     empty_response = {
         "total_rides": 0, "total_hours": 0, "total_gross": 0, "total_net": 0,
         "total_wwv": 0, "total_overtime_hours": 0, "total_night_hours": 0,
