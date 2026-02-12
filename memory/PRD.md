@@ -55,3 +55,15 @@ Private chauffeur salary calculator for "Get Driven" company. Belgian law compli
 - Export functionality (CSV/PDF)
 - Monthly report generation
 - Student hours counter (600h/year Belgian limit)
+
+## Update Feb 2026 - Iteration 2
+### Changes Made:
+1. **Bruto/Netto formule gecorrigeerd**: Bruto = uurloon + WWV + extra kosten + sociale bijdrage. Netto = Bruto - sociale bijdrage
+2. **Auto merk logo's**: CarBrandLogo component met Google favicon API (50+ merken ondersteund, fallback naar initialen)
+3. **Uitgebreid Dashboard**: 
+   - 8 stat cards (ritten, uren, bruto, netto, overuren, nachturen, gem/rit, gem/uur)
+   - 4 tabs: Verdiensten, Uren, Auto's, Patronen
+   - Filters: maand, klant, automerk (met Select dropdowns)
+   - Charts: maandelijkse verdiensten bar, wekelijkse trend area, uren breakdown, merk pie, weekdag radar, werktijden distributie
+   - Top klanten ranking, auto details overzicht
+4. **Backend stats uitgebreid**: filterable op month/client_name/car_brand, meer datapoints
