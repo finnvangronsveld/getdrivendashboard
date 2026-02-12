@@ -183,9 +183,8 @@ async def login(input: LoginInput):
     return {"token": token, "user": {"id": user["id"], "email": user["email"], "name": user["name"]}}
 
 @api_router.get("/auth/me")
-async def get_me(authorization: str = None):
-    payload = await get_current_user(authorization)
-    user = await db.users.find_one({"id": payload["user_id"]}, {"_id": 0, "password_hash": 0})
+async def get_me(current_user: dict = Depends(get_current_user)):
+    user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0, "password_hash": 0})
     if not user:
         raise HTTPException(status_code=404, detail="Gebruiker niet gevonden")
     return user
