@@ -42,9 +42,9 @@ const SI_SLUGS = {
 const MercedesLogo = () => (
   <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10" />
-    <path d="M12 2 L12 12 L3.5 17.5" />
-    <path d="M12 12 L20.5 17.5" />
-    <path d="M3.5 17.5 L20.5 17.5" />
+    <line x1="12" y1="2" x2="12" y2="12" />
+    <line x1="12" y1="12" x2="3.5" y2="17.5" />
+    <line x1="12" y1="12" x2="20.5" y2="17.5" />
   </svg>
 );
 
