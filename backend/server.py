@@ -245,9 +245,8 @@ async def get_rides(current_user: dict = Depends(get_current_user), month: Optio
     return rides
 
 @api_router.put("/rides/{ride_id}")
-async def update_ride(ride_id: str, ride: RideInput, authorization: str = None):
-    payload = await get_current_user(authorization)
-    user_id = payload["user_id"]
+async def update_ride(ride_id: str, ride: RideInput, current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
 
     existing = await db.rides.find_one({"id": ride_id, "user_id": user_id}, {"_id": 0})
     if not existing:
