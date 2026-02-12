@@ -48,6 +48,28 @@ export default function RideHistory() {
   const totalNet = filtered.reduce((s, r) => s + (r.net_pay || 0), 0);
   const totalHours = filtered.reduce((s, r) => s + (r.total_hours || 0), 0);
 
+  // Group rides by month (YYYY-MM)
+  const MONTH_NAMES = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
+  const groupedByMonth = useMemo(() => {
+    const groups = {};
+    filtered.forEach(r => {
+      const key = r.date.substring(0, 7); // "YYYY-MM"
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(r);
+    });
+    // Sort months descending, rides within month descending by date
+    return Object.entries(groups)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([monthKey, monthRides]) => {
+        const [y, m] = monthKey.split('-');
+        const label = `${MONTH_NAMES[parseInt(m, 10) - 1]} ${y}`;
+        const monthNet = monthRides.reduce((s, r) => s + (r.net_pay || 0), 0);
+        const monthHours = monthRides.reduce((s, r) => s + (r.total_hours || 0), 0);
+        const sorted = monthRides.sort((a, b) => b.date.localeCompare(a.date));
+        return { key: monthKey, label, rides: sorted, net: monthNet, hours: monthHours };
+      });
+  }, [filtered]);
+
   if (loading) return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center">
       <div className="w-8 h-8 border-2 border-[#D9F99D] border-t-transparent rounded-full animate-spin" />
