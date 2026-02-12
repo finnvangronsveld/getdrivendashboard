@@ -239,6 +239,9 @@ export default function RideHistory() {
                   </div>
                 )}
               </div>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}
