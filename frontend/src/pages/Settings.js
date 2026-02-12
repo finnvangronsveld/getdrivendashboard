@@ -105,8 +105,10 @@ export default function Settings() {
             <li>Eerste {settings.normal_hours_threshold}u aan €{settings.base_rate}/uur = normaal tarief</li>
             <li>Daarna: €{settings.base_rate} x {settings.overtime_multiplier} = €{(settings.base_rate * settings.overtime_multiplier).toFixed(2)}/uur (overuren)</li>
             <li>Tussen 20:00-06:00: +€{settings.night_surcharge}/uur nachttoeslag</li>
+            <li>Uurloon = normaal + overuren + nachttoeslag</li>
+            <li className="pt-1 border-t border-[#D9F99D]/10 font-medium text-[#D9F99D]/80">Bruto = uurloon + WWV + extra kosten + sociale bijdrage</li>
+            <li className="font-medium text-[#D9F99D]/80">Netto = Bruto - sociale bijdrage ({settings.social_contribution_pct}%)</li>
             <li>WWV: {settings.wwv_rate} €/km woon-werk verkeer vergoeding</li>
-            <li>Sociale bijdrage: {settings.social_contribution_pct}% op bruto loon</li>
             <li>Student in Belgie: geen inkomstenbelasting</li>
           </ul>
         </div>
