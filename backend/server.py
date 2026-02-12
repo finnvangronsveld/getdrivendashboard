@@ -192,9 +192,8 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 # ─── Rides Routes ───
 
 @api_router.post("/rides")
-async def create_ride(ride: RideInput, authorization: str = None):
-    payload = await get_current_user(authorization)
-    user_id = payload["user_id"]
+async def create_ride(ride: RideInput, current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
 
     # Get user settings
     settings = await db.settings.find_one({"user_id": user_id}, {"_id": 0})
