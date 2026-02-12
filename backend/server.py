@@ -300,18 +300,17 @@ async def get_settings(current_user: dict = Depends(get_current_user)):
     return settings
 
 @api_router.put("/settings")
-async def update_settings(input: SettingsInput, authorization: str = None):
-    payload = await get_current_user(authorization)
+async def update_settings(input: SettingsInput, current_user: dict = Depends(get_current_user)):
     update_data = {k: v for k, v in input.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="Geen gegevens om bij te werken")
 
     await db.settings.update_one(
-        {"user_id": payload["user_id"]},
+        {"user_id": current_user["user_id"]},
         {"$set": update_data},
         upsert=True
     )
-    settings = await db.settings.find_one({"user_id": payload["user_id"]}, {"_id": 0, "user_id": 0})
+    settings = await db.settings.find_one({"user_id": current_user["user_id"]}, {"_id": 0, "user_id": 0})
     return settings
 
 # ─── Stats Route ───
