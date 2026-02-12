@@ -316,9 +316,8 @@ async def update_settings(input: SettingsInput, current_user: dict = Depends(get
 # ─── Stats Route ───
 
 @api_router.get("/stats")
-async def get_stats(authorization: str = None):
-    payload = await get_current_user(authorization)
-    user_id = payload["user_id"]
+async def get_stats(current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
 
     rides = await db.rides.find({"user_id": user_id}, {"_id": 0}).to_list(5000)
 
