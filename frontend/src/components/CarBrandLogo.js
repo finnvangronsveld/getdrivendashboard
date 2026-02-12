@@ -40,12 +40,12 @@ const SI_SLUGS = {
 
 // React SVG components for brands NOT on Simple Icons
 const MercedesLogo = () => (
-  <svg viewBox="0 0 100 100" className="w-full h-full">
-    <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="5"/>
-    <circle cx="50" cy="50" r="37" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <line x1="50" y1="13" x2="50" y2="50" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/>
-    <line x1="50" y1="50" x2="18" y2="72" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/>
-    <line x1="50" y1="50" x2="82" y2="72" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/>
+  <svg viewBox="0 0 200 200" className="w-full h-full">
+    <circle cx="100" cy="100" r="90" fill="none" stroke="currentColor" strokeWidth="8"/>
+    <circle cx="100" cy="100" r="78" fill="none" stroke="currentColor" strokeWidth="4"/>
+    <path d="M100 22 L100 100 L32 138" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M100 100 L168 138" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M32 138 L168 138" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round"/>
   </svg>
 );
 
