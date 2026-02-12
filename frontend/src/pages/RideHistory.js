@@ -204,7 +204,7 @@ export default function RideHistory() {
                         </div>
                         <div>
                           <p className="text-zinc-500 text-xs mb-1">Bruto</p>
-                          <p className="text-white font-mono font-medium">€{(ride.gross_total || ride.gross_pay)?.toFixed(2)}</p>
+                          <p className="text-white font-mono font-medium">€{(ride.gross_total || (ride.gross_pay + (ride.wwv_amount || 0) + (ride.extra_costs || 0) + (ride.social_contribution || 0)))?.toFixed(2)}</p>
                         </div>
                         <div>
                           <p className="text-zinc-500 text-xs mb-1">Sociale Bijdrage</p>
