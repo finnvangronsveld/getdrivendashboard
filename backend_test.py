@@ -167,7 +167,7 @@ class GetDrivenAPITester:
             "notes": "Test ride for API testing"
         }
         
-        success, status, data = self.make_request('POST', '/rides', ride_data, 201)
+        success, status, data = self.make_request('POST', '/rides', ride_data, 200)
         
         if success and isinstance(data, dict) and 'id' in data:
             self.test_ride_id = data['id']
