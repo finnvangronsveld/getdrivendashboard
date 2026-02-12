@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-// Simple Icons CDN slugs (verified working)
+// Simple Icons CDN slugs (verified working via curl)
 const SI_SLUGS = {
   'bmw': 'bmw',
   'audi': 'audi',
@@ -38,46 +38,69 @@ const SI_SLUGS = {
   'polestar': 'polestar',
 };
 
-// Custom SVG data URIs for brands NOT on Simple Icons (transparent, mono)
-const CUSTOM_LOGOS = {
-  'mercedes': `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="%23D9F99D" stroke-width="5"/><circle cx="50" cy="50" r="38" fill="none" stroke="%23D9F99D" stroke-width="2"/><path d="M50 12 L50 50 L16 74" fill="none" stroke="%23D9F99D" stroke-width="5" stroke-linecap="round"/><path d="M50 50 L84 74" fill="none" stroke="%23D9F99D" stroke-width="5" stroke-linecap="round"/><path d="M16 74 L84 74" fill="none" stroke="%23D9F99D" stroke-width="5" stroke-linecap="round"/></svg>')}`,
-  'jaguar': `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 60"><path d="M10 30 C10 15 25 8 40 12 C48 14 52 18 58 18 C65 18 72 14 80 12 C90 9 98 18 95 28 C92 38 82 45 70 42 C62 40 58 35 50 35 C42 35 38 40 30 42 C18 45 8 38 10 30Z" fill="%23D9F99D"/></svg>')}`,
-  'lexus': `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="45" ry="30" fill="none" stroke="%23D9F99D" stroke-width="4"/><path d="M30 25 L50 75 L70 25" fill="none" stroke="%23D9F99D" stroke-width="5" stroke-linejoin="round"/></svg>')}`,
-  'alfa romeo': `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="%23D9F99D" stroke-width="4"/><line x1="50" y1="4" x2="50" y2="96" stroke="%23D9F99D" stroke-width="3"/><path d="M50 20 C35 30 25 42 25 55 C25 65 35 72 50 72" fill="none" stroke="%23D9F99D" stroke-width="3"/><path d="M50 25 L55 35 L65 35 L57 42 L60 52 L50 46 L40 52 L43 42 L35 35 L45 35Z" fill="%23D9F99D"/></svg>')}`,
-  'genesis': `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 5 C25 5 5 25 5 50 L50 50 L95 50 C95 25 75 5 50 5Z" fill="none" stroke="%23D9F99D" stroke-width="4"/><path d="M5 50 C5 75 25 95 50 95 C75 95 95 75 95 50" fill="none" stroke="%23D9F99D" stroke-width="4"/><circle cx="50" cy="50" r="8" fill="%23D9F99D"/></svg>')}`,
-  'land rover': `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><ellipse cx="60" cy="30" rx="56" ry="26" fill="none" stroke="%23D9F99D" stroke-width="4"/><text x="60" y="36" text-anchor="middle" fill="%23D9F99D" font-size="16" font-family="sans-serif" font-weight="bold">LAND ROVER</text></svg>')}`,
-  'range rover': `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><ellipse cx="60" cy="30" rx="56" ry="26" fill="none" stroke="%23D9F99D" stroke-width="4"/><text x="60" y="36" text-anchor="middle" fill="%23D9F99D" font-size="14" font-family="sans-serif" font-weight="bold">RANGE ROVER</text></svg>')}`,
-  'ds': `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="62" text-anchor="middle" fill="%23D9F99D" font-size="45" font-family="serif" font-weight="bold">DS</text></svg>')}`,
-  'cupra': `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80"><path d="M10 40 L30 10 L70 10 L90 40 L70 70 L30 70Z" fill="none" stroke="%23D9F99D" stroke-width="5"/><path d="M25 40 L40 20 L60 20 L75 40 L60 60 L40 60Z" fill="none" stroke="%23D9F99D" stroke-width="3"/></svg>')}`,
-  'smart': `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="%23D9F99D" stroke-width="4"/><path d="M30 55 Q40 35 50 40 Q60 35 70 55" fill="none" stroke="%23D9F99D" stroke-width="5" stroke-linecap="round"/></svg>')}`,
-  'chevrolet': `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 60"><rect x="5" y="20" width="90" height="20" fill="none" stroke="%23D9F99D" stroke-width="4"/><rect x="25" y="10" width="50" height="40" fill="none" stroke="%23D9F99D" stroke-width="3"/></svg>')}`,
-};
+// React SVG components for brands NOT on Simple Icons
+const MercedesLogo = () => (
+  <svg viewBox="0 0 100 100" className="w-full h-full">
+    <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="5"/>
+    <circle cx="50" cy="50" r="37" fill="none" stroke="currentColor" strokeWidth="2"/>
+    <line x1="50" y1="13" x2="50" y2="50" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/>
+    <line x1="50" y1="50" x2="18" y2="72" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/>
+    <line x1="50" y1="50" x2="82" y2="72" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/>
+  </svg>
+);
 
-// Alias mapping
-const ALIASES = {
-  'mercedes-benz': 'mercedes',
-  'vw': 'volkswagen',
-  'rolls royce': 'rolls-royce',
-  'citroën': 'citroen',
-  'range rover': 'range rover',
+const JaguarLogo = () => (
+  <svg viewBox="0 0 100 70" className="w-full h-full">
+    <path d="M5 35 C5 15 20 5 40 10 C50 13 55 20 60 20 C70 20 78 13 88 10 C95 8 100 18 97 30 C94 42 82 50 68 47 C58 44 55 38 48 35 C42 38 35 44 28 47 C15 50 5 45 5 35Z" 
+      fill="none" stroke="currentColor" strokeWidth="4"/>
+  </svg>
+);
+
+const LexusLogo = () => (
+  <svg viewBox="0 0 100 100" className="w-full h-full">
+    <ellipse cx="50" cy="50" rx="44" ry="28" fill="none" stroke="currentColor" strokeWidth="4"/>
+    <path d="M32 28 L50 72 L68 28" fill="none" stroke="currentColor" strokeWidth="5" strokeLinejoin="round" strokeLinecap="round"/>
+  </svg>
+);
+
+const AlfaRomeoLogo = () => (
+  <svg viewBox="0 0 100 100" className="w-full h-full">
+    <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="4"/>
+    <line x1="50" y1="5" x2="50" y2="95" stroke="currentColor" strokeWidth="3"/>
+    <path d="M50 20 C30 32 22 45 22 55 C22 68 35 78 50 78" fill="none" stroke="currentColor" strokeWidth="3"/>
+    <path d="M58 30 L62 38 L55 42 L58 48 L50 44 L42 48 L45 42 L38 38 L42 30 L50 34Z" fill="currentColor"/>
+  </svg>
+);
+
+const GenesisLogo = () => (
+  <svg viewBox="0 0 100 100" className="w-full h-full">
+    <path d="M50 8 C28 8 8 28 8 50" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/>
+    <path d="M92 50 C92 28 72 8 50 8" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/>
+    <path d="M8 50 C8 72 28 92 50 92 C72 92 92 72 92 50" fill="none" stroke="currentColor" strokeWidth="4"/>
+    <line x1="8" y1="50" x2="92" y2="50" stroke="currentColor" strokeWidth="3"/>
+    <circle cx="50" cy="50" r="6" fill="currentColor"/>
+  </svg>
+);
+
+const LandRoverLogo = () => (
+  <svg viewBox="0 0 120 60" className="w-full h-full">
+    <ellipse cx="60" cy="30" rx="55" ry="25" fill="none" stroke="currentColor" strokeWidth="4"/>
+    <ellipse cx="60" cy="30" rx="42" ry="18" fill="none" stroke="currentColor" strokeWidth="2"/>
+  </svg>
+);
+
+const CUSTOM_COMPONENTS = {
+  'mercedes': MercedesLogo,
+  'mercedes-benz': MercedesLogo,
+  'jaguar': JaguarLogo,
+  'lexus': LexusLogo,
+  'alfa romeo': AlfaRomeoLogo,
+  'genesis': GenesisLogo,
+  'land rover': LandRoverLogo,
+  'range rover': LandRoverLogo,
 };
 
 const ACCENT_HEX = 'D9F99D';
-
-function getLogoUrl(brand) {
-  const key = brand.toLowerCase().trim();
-  const aliased = ALIASES[key] || key;
-
-  // Check Simple Icons first
-  const slug = SI_SLUGS[aliased] || SI_SLUGS[key];
-  if (slug) return `https://cdn.simpleicons.org/${slug}/${ACCENT_HEX}`;
-
-  // Check custom logos
-  const custom = CUSTOM_LOGOS[aliased] || CUSTOM_LOGOS[key];
-  if (custom) return custom;
-
-  return null;
-}
 
 function getInitials(brand) {
   const words = brand.trim().split(/\s+/);
@@ -87,7 +110,7 @@ function getInitials(brand) {
 
 export default function CarBrandLogo({ brand, size = 'md', className = '' }) {
   const [imgFailed, setImgFailed] = useState(false);
-  const logoUrl = getLogoUrl(brand);
+  const key = brand.toLowerCase().trim();
 
   const sizes = {
     sm: { box: 'w-8 h-8', img: 'w-5 h-5', text: 'text-[10px]' },
@@ -96,11 +119,23 @@ export default function CarBrandLogo({ brand, size = 'md', className = '' }) {
   };
   const s = sizes[size] || sizes.md;
 
-  if (logoUrl && !imgFailed) {
+  // Check for custom SVG component first
+  const CustomSvg = CUSTOM_COMPONENTS[key];
+  if (CustomSvg) {
+    return (
+      <div className={`${s.box} flex items-center justify-center flex-shrink-0 text-[#D9F99D] ${className}`}>
+        <div className={s.img}><CustomSvg /></div>
+      </div>
+    );
+  }
+
+  // Check Simple Icons CDN
+  const slug = SI_SLUGS[key];
+  if (slug && !imgFailed) {
     return (
       <div className={`${s.box} flex items-center justify-center flex-shrink-0 ${className}`}>
         <img
-          src={logoUrl}
+          src={`https://cdn.simpleicons.org/${slug}/${ACCENT_HEX}`}
           alt={brand}
           className={`${s.img} object-contain`}
           loading="lazy"
@@ -110,6 +145,7 @@ export default function CarBrandLogo({ brand, size = 'md', className = '' }) {
     );
   }
 
+  // Fallback: styled initials
   return (
     <div className={`${s.box} flex items-center justify-center flex-shrink-0 ${className}`}>
       <span className={`font-bold ${s.text} text-[#D9F99D]`} style={{ fontFamily: 'Chivo, sans-serif' }}>
