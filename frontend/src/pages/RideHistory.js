@@ -126,11 +126,11 @@ export default function RideHistory() {
             <p>Geen ritten gevonden</p>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-10">
             {groupedByMonth.map(({ key, label, rides: monthRides, net, hours }) => (
               <div key={key} data-testid={`month-group-${key}`}>
                 {/* Month Header */}
-                <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#27272A]">
+                <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#27272A]">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-[#D9F99D]" />
                     <h2 className="text-white text-base font-semibold" style={{ fontFamily: 'Chivo, sans-serif' }}>{label}</h2>
