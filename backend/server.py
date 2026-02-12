@@ -384,7 +384,7 @@ async def get_stats(
 
     total_rides = len(rides)
     total_hours = sum(r.get("total_hours", 0) for r in rides)
-    total_gross = sum(r.get("gross_total", r.get("gross_pay", 0)) for r in rides)
+    total_gross = sum(get_gross_total(r) for r in rides)
     total_net = sum(r.get("net_pay", 0) for r in rides)
     total_wwv = sum(r.get("wwv_amount", 0) for r in rides)
     total_overtime = sum(r.get("overtime_hours", 0) for r in rides)
@@ -400,7 +400,7 @@ async def get_stats(
         mk = r["date"][:7]
         if mk not in monthly:
             monthly[mk] = {"month": mk, "gross": 0, "net": 0, "rides": 0, "hours": 0, "overtime": 0, "night": 0}
-        monthly[mk]["gross"] += r.get("gross_total", r.get("gross_pay", 0))
+        monthly[mk]["gross"] += get_gross_total(r)
         monthly[mk]["net"] += r.get("net_pay", 0)
         monthly[mk]["rides"] += 1
         monthly[mk]["hours"] += r.get("total_hours", 0)
