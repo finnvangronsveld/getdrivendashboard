@@ -323,74 +323,178 @@ async def update_settings(input: SettingsInput, current_user: dict = Depends(get
 # ─── Stats Route ───
 
 @api_router.get("/stats")
-async def get_stats(current_user: dict = Depends(get_current_user)):
+async def get_stats(
+    current_user: dict = Depends(get_current_user),
+    month: Optional[str] = None,
+    client_name: Optional[str] = None,
+    car_brand: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+):
     user_id = current_user["user_id"]
 
-    rides = await db.rides.find({"user_id": user_id}, {"_id": 0}).to_list(5000)
+    query = {"user_id": user_id}
+    if month:
+        query["date"] = {"$regex": f"^{month}"}
+    if client_name:
+        query["client_name"] = {"$regex": client_name, "$options": "i"}
+    if car_brand:
+        query["car_brand"] = {"$regex": car_brand, "$options": "i"}
+    if date_from and date_to:
+        query["date"] = {"$gte": date_from, "$lte": date_to}
+    elif date_from:
+        query["date"] = {"$gte": date_from}
+    elif date_to:
+        query["date"] = {"$lte": date_to}
+
+    rides = await db.rides.find(query, {"_id": 0}).to_list(5000)
+    # Also get ALL rides for global stats (filters, unique values)
+    all_rides = await db.rides.find({"user_id": user_id}, {"_id": 0}).to_list(5000)
+
+    empty_response = {
+        "total_rides": 0, "total_hours": 0, "total_gross": 0, "total_net": 0,
+        "total_wwv": 0, "total_overtime_hours": 0, "total_night_hours": 0,
+        "total_social": 0, "total_extra_costs": 0,
+        "avg_per_ride": 0, "avg_per_hour": 0,
+        "monthly_earnings": [], "weekly_earnings": [],
+        "car_stats": [], "client_stats": [], "brand_stats": [],
+        "hourly_distribution": [], "day_of_week_stats": [],
+        "recent_rides": [],
+        "available_months": [], "available_clients": [], "available_brands": [],
+    }
 
     if not rides:
-        return {
-            "total_rides": 0,
-            "total_hours": 0,
-            "total_gross": 0,
-            "total_net": 0,
-            "total_wwv": 0,
-            "monthly_earnings": [],
-            "car_stats": [],
-            "client_stats": [],
-            "recent_rides": [],
-        }
+        # Still provide filter options from all rides
+        if all_rides:
+            empty_response["available_months"] = sorted(set(r["date"][:7] for r in all_rides), reverse=True)
+            empty_response["available_clients"] = sorted(set(r["client_name"] for r in all_rides))
+            empty_response["available_brands"] = sorted(set(r["car_brand"] for r in all_rides))
+        return empty_response
 
     total_rides = len(rides)
     total_hours = sum(r.get("total_hours", 0) for r in rides)
-    total_gross = sum(r.get("gross_pay", 0) for r in rides)
+    total_gross = sum(r.get("gross_total", r.get("gross_pay", 0)) for r in rides)
     total_net = sum(r.get("net_pay", 0) for r in rides)
     total_wwv = sum(r.get("wwv_amount", 0) for r in rides)
+    total_overtime = sum(r.get("overtime_hours", 0) for r in rides)
+    total_night = sum(r.get("night_hours", 0) for r in rides)
+    total_social = sum(r.get("social_contribution", 0) for r in rides)
+    total_extra = sum(r.get("extra_costs", 0) for r in rides)
+    avg_per_ride = total_net / total_rides if total_rides > 0 else 0
+    avg_per_hour = total_net / total_hours if total_hours > 0 else 0
 
     # Monthly earnings
     monthly = {}
     for r in rides:
-        month_key = r["date"][:7]
-        if month_key not in monthly:
-            monthly[month_key] = {"month": month_key, "gross": 0, "net": 0, "rides": 0, "hours": 0}
-        monthly[month_key]["gross"] += r.get("gross_pay", 0)
-        monthly[month_key]["net"] += r.get("net_pay", 0)
-        monthly[month_key]["rides"] += 1
-        monthly[month_key]["hours"] += r.get("total_hours", 0)
-
+        mk = r["date"][:7]
+        if mk not in monthly:
+            monthly[mk] = {"month": mk, "gross": 0, "net": 0, "rides": 0, "hours": 0, "overtime": 0, "night": 0}
+        monthly[mk]["gross"] += r.get("gross_total", r.get("gross_pay", 0))
+        monthly[mk]["net"] += r.get("net_pay", 0)
+        monthly[mk]["rides"] += 1
+        monthly[mk]["hours"] += r.get("total_hours", 0)
+        monthly[mk]["overtime"] += r.get("overtime_hours", 0)
+        monthly[mk]["night"] += r.get("night_hours", 0)
     monthly_earnings = sorted(monthly.values(), key=lambda x: x["month"])
     for m in monthly_earnings:
-        m["gross"] = round(m["gross"], 2)
-        m["net"] = round(m["net"], 2)
-        m["hours"] = round(m["hours"], 2)
+        for k in ["gross", "net", "hours", "overtime", "night"]:
+            m[k] = round(m[k], 2)
 
-    # Car stats
+    # Weekly earnings
+    from datetime import datetime as dt
+    weekly = {}
+    for r in rides:
+        d = dt.fromisoformat(r["date"])
+        wk = d.strftime("%Y-W%W")
+        if wk not in weekly:
+            weekly[wk] = {"week": wk, "net": 0, "rides": 0, "hours": 0}
+        weekly[wk]["net"] += r.get("net_pay", 0)
+        weekly[wk]["rides"] += 1
+        weekly[wk]["hours"] += r.get("total_hours", 0)
+    weekly_earnings = sorted(weekly.values(), key=lambda x: x["week"])[-12:]
+    for w in weekly_earnings:
+        w["net"] = round(w["net"], 2)
+        w["hours"] = round(w["hours"], 2)
+
+    # Car stats (brand + model)
     cars = {}
     for r in rides:
         car_key = f"{r['car_brand']} {r['car_model']}"
         if car_key not in cars:
-            cars[car_key] = {"car": car_key, "rides": 0, "hours": 0}
+            cars[car_key] = {"car": car_key, "brand": r["car_brand"], "rides": 0, "hours": 0, "earnings": 0}
         cars[car_key]["rides"] += 1
         cars[car_key]["hours"] += r.get("total_hours", 0)
-
+        cars[car_key]["earnings"] += r.get("net_pay", 0)
     car_stats = sorted(cars.values(), key=lambda x: x["rides"], reverse=True)
     for c in car_stats:
         c["hours"] = round(c["hours"], 2)
+        c["earnings"] = round(c["earnings"], 2)
+
+    # Brand-only stats
+    brands = {}
+    for r in rides:
+        b = r["car_brand"]
+        if b not in brands:
+            brands[b] = {"brand": b, "rides": 0, "hours": 0, "earnings": 0}
+        brands[b]["rides"] += 1
+        brands[b]["hours"] += r.get("total_hours", 0)
+        brands[b]["earnings"] += r.get("net_pay", 0)
+    brand_stats = sorted(brands.values(), key=lambda x: x["rides"], reverse=True)
+    for b in brand_stats:
+        b["hours"] = round(b["hours"], 2)
+        b["earnings"] = round(b["earnings"], 2)
 
     # Client stats
     clients = {}
     for r in rides:
         cl = r["client_name"]
         if cl not in clients:
-            clients[cl] = {"client": cl, "rides": 0, "earnings": 0}
+            clients[cl] = {"client": cl, "rides": 0, "earnings": 0, "hours": 0}
         clients[cl]["rides"] += 1
         clients[cl]["earnings"] += r.get("net_pay", 0)
-
-    client_stats = sorted(clients.values(), key=lambda x: x["rides"], reverse=True)
+        clients[cl]["hours"] += r.get("total_hours", 0)
+    client_stats = sorted(clients.values(), key=lambda x: x["earnings"], reverse=True)
     for c in client_stats:
         c["earnings"] = round(c["earnings"], 2)
+        c["hours"] = round(c["hours"], 2)
+
+    # Hourly distribution (which hours do you work most)
+    hourly = {str(h).zfill(2): 0 for h in range(24)}
+    for r in rides:
+        try:
+            sh = int(r["start_time"].split(":")[0])
+            eh = int(r["end_time"].split(":")[0])
+            if eh <= sh:
+                eh += 24
+            for h in range(sh, eh):
+                hourly[str(h % 24).zfill(2)] += 1
+        except (ValueError, IndexError):
+            pass
+    hourly_distribution = [{"hour": h, "count": c} for h, c in sorted(hourly.items())]
+
+    # Day of week stats
+    day_names = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"]
+    dow = {i: {"day": day_names[i], "rides": 0, "hours": 0, "earnings": 0} for i in range(7)}
+    for r in rides:
+        try:
+            d = dt.fromisoformat(r["date"])
+            di = d.weekday()
+            dow[di]["rides"] += 1
+            dow[di]["hours"] += r.get("total_hours", 0)
+            dow[di]["earnings"] += r.get("net_pay", 0)
+        except (ValueError, IndexError):
+            pass
+    day_of_week_stats = [dow[i] for i in range(7)]
+    for d in day_of_week_stats:
+        d["hours"] = round(d["hours"], 2)
+        d["earnings"] = round(d["earnings"], 2)
 
     recent_rides = sorted(rides, key=lambda x: x["date"], reverse=True)[:5]
+
+    # Available filter options from ALL rides
+    available_months = sorted(set(r["date"][:7] for r in all_rides), reverse=True)
+    available_clients = sorted(set(r["client_name"] for r in all_rides))
+    available_brands = sorted(set(r["car_brand"] for r in all_rides))
 
     return {
         "total_rides": total_rides,
@@ -398,10 +502,23 @@ async def get_stats(current_user: dict = Depends(get_current_user)):
         "total_gross": round(total_gross, 2),
         "total_net": round(total_net, 2),
         "total_wwv": round(total_wwv, 2),
+        "total_overtime_hours": round(total_overtime, 2),
+        "total_night_hours": round(total_night, 2),
+        "total_social": round(total_social, 2),
+        "total_extra_costs": round(total_extra, 2),
+        "avg_per_ride": round(avg_per_ride, 2),
+        "avg_per_hour": round(avg_per_hour, 2),
         "monthly_earnings": monthly_earnings,
+        "weekly_earnings": weekly_earnings,
         "car_stats": car_stats,
+        "brand_stats": brand_stats,
         "client_stats": client_stats,
+        "hourly_distribution": hourly_distribution,
+        "day_of_week_stats": day_of_week_stats,
         "recent_rides": recent_rides,
+        "available_months": available_months,
+        "available_clients": available_clients,
+        "available_brands": available_brands,
     }
 
 # ─── Health ───
