@@ -84,7 +84,7 @@ export default function CarBrandLogo({ brand, size = 'md', className = '' }) {
   const tsz = textSizes[size] || textSizes.md;
   const imgSz = imgSizes[size] || imgSizes.md;
 
-  const logoUrl = domain ? `https://img.logo.dev/${domain}?token=pk_a8V0NDDqTkKXw3VLhB1jBA&size=${imgSz * 2}&format=png` : null;
+  const logoUrl = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : null;
 
   if (logoUrl && !imgFailed) {
     return (
