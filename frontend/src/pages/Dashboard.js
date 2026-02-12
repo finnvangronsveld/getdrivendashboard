@@ -182,8 +182,8 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           <StatCard icon={Clock} label="Overuren" value={s.total_overtime_hours || 0} format="hours" delay={4} />
           <StatCard icon={Moon} label="Nachturen" value={s.total_night_hours || 0} format="hours" delay={5} />
-          <StatCard icon={Euro} label="Gem./Rit" value={s.avg_per_ride || 0} format="eur" delay={6} />
-          <StatCard icon={Euro} label="Gem./Uur" value={s.avg_per_hour || 0} format="eur" delay={7} />
+          <StatCard icon={Euro} label="Gem/Rit" value={s.avg_per_ride || 0} format="eur" delay={6} />
+          <StatCard icon={Euro} label="Gem/Uur" value={s.avg_per_hour || 0} format="eur" delay={7} />
         </div>
 
         {noData ? (
@@ -480,7 +480,7 @@ function StatCard({ icon: Icon, label, value, format, delay, highlight }) {
   };
   return (
     <div
-      data-testid={`stat-card-${label.toLowerCase().replace(/[\s\/]/g, '-')}`}
+      data-testid={`stat-card-${label.toLowerCase().replace(/[\s\/\.]/g, '-')}`}
       className={`bg-[#0F0F11] border rounded-xl p-5 transition-all opacity-0 animate-fadeInUp ${highlight ? 'border-[#D9F99D]/30 glow-lime-border' : 'border-[#27272A] hover:border-[#D9F99D]/20'}`}
       style={{ animationDelay: `${delay * 0.05}s`, animationFillMode: 'forwards' }}
     >

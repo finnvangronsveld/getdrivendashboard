@@ -191,7 +191,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 
 # ─── Rides Routes ───
 
-@api_router.post("/rides")
+@api_router.post("/rides", status_code=201)
 async def create_ride(ride: RideInput, current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]
 
