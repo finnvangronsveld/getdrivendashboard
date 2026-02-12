@@ -292,9 +292,8 @@ async def delete_ride(ride_id: str, current_user: dict = Depends(get_current_use
 # ─── Settings Routes ───
 
 @api_router.get("/settings")
-async def get_settings(authorization: str = None):
-    payload = await get_current_user(authorization)
-    settings = await db.settings.find_one({"user_id": payload["user_id"]}, {"_id": 0, "user_id": 0})
+async def get_settings(current_user: dict = Depends(get_current_user)):
+    settings = await db.settings.find_one({"user_id": current_user["user_id"]}, {"_id": 0, "user_id": 0})
     if not settings:
         return DEFAULT_SETTINGS
     settings.pop("user_id", None)
