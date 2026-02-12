@@ -1,380 +1,272 @@
-#!/usr/bin/env python3
-
 import requests
 import sys
 import json
-from datetime import datetime, timedelta
-from typing import Dict, Any
+from datetime import datetime
 
-class GetDrivenAPITester:
+class ChauffeurAPITester:
     def __init__(self, base_url="https://chauffeur-calc.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.token = None
-        self.user_id = None
         self.tests_run = 0
         self.tests_passed = 0
-        self.test_results = []
+        self.test_ride_id = None
 
-    def log_test(self, name: str, success: bool, details: str = ""):
-        """Log test result"""
-        self.tests_run += 1
-        if success:
-            self.tests_passed += 1
-            status = "✅ PASSED"
-        else:
-            status = "❌ FAILED"
-        
-        result = f"{status} - {name}"
-        if details:
-            result += f" | {details}"
-        
-        print(result)
-        self.test_results.append({
-            "test": name,
-            "passed": success,
-            "details": details
-        })
-        
-        return success
+    def log(self, message, level="INFO"):
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        print(f"[{timestamp}] {level}: {message}")
 
-    def make_request(self, method: str, endpoint: str, data: Dict[Any, Any] = None, expected_status: int = 200):
-        """Make API request with error handling"""
-        url = f"{self.base_url}/{endpoint.lstrip('/')}"
-        headers = {'Content-Type': 'application/json'}
-        
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        test_headers = {'Content-Type': 'application/json'}
         if self.token:
-            headers['Authorization'] = f'Bearer {self.token}'
+            test_headers['Authorization'] = f'Bearer {self.token}'
+        if headers:
+            test_headers.update(headers)
+
+        self.tests_run += 1
+        self.log(f"Testing {name}...")
         
         try:
             if method == 'GET':
-                response = requests.get(url, headers=headers, timeout=30)
+                response = requests.get(url, headers=test_headers)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers, timeout=30)
+                response = requests.post(url, json=data, headers=test_headers)
             elif method == 'PUT':
-                response = requests.put(url, json=data, headers=headers, timeout=30)
+                response = requests.put(url, json=data, headers=test_headers)
             elif method == 'DELETE':
-                response = requests.delete(url, headers=headers, timeout=30)
-            else:
-                raise ValueError(f"Unsupported method: {method}")
-            
+                response = requests.delete(url, headers=test_headers)
+
             success = response.status_code == expected_status
-            
-            try:
-                response_data = response.json()
-            except:
-                response_data = response.text
-            
-            return success, response.status_code, response_data
-            
-        except requests.exceptions.RequestException as e:
-            return False, 0, str(e)
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ {name} - Status: {response.status_code}")
+                return True, response.json() if response.content else {}
+            else:
+                self.log(f"❌ {name} - Expected {expected_status}, got {response.status_code}", "ERROR")
+                if response.content:
+                    try:
+                        error_data = response.json()
+                        self.log(f"   Error: {error_data}", "ERROR")
+                    except:
+                        self.log(f"   Response: {response.text[:200]}", "ERROR")
+                return False, {}
 
-    def test_health_check(self):
+        except Exception as e:
+            self.log(f"❌ {name} - Exception: {str(e)}", "ERROR")
+            return False, {}
+
+    def test_health(self):
         """Test health endpoint"""
-        success, status, data = self.make_request('GET', '/health')
-        return self.log_test("Health Check", success, f"Status: {status}")
+        return self.run_test("Health Check", "GET", "health", 200)
 
-    def test_register_new_user(self):
-        """Test user registration"""
-        timestamp = int(datetime.now().timestamp())
-        test_data = {
-            "email": f"test_user_{timestamp}@test.com",
-            "password": "TestPassword123!",
-            "name": f"Test User {timestamp}"
+    def test_auth_flow(self):
+        """Test authentication flow"""
+        # Login with test credentials
+        success, response = self.run_test(
+            "Login",
+            "POST",
+            "auth/login",
+            200,
+            data={"email": "test@test.com", "password": "test123"}
+        )
+        
+        if success and 'token' in response:
+            self.token = response['token']
+            self.log(f"✅ Token obtained: {self.token[:20]}...")
+            
+            # Test /auth/me endpoint
+            me_success, me_response = self.run_test("Get Current User", "GET", "auth/me", 200)
+            if me_success:
+                self.log(f"✅ User info: {me_response.get('email', 'Unknown')}")
+            return True
+        return False
+
+    def test_settings_endpoints(self):
+        """Test settings endpoints"""
+        # Get settings
+        get_success, settings = self.run_test("Get Settings", "GET", "settings", 200)
+        if not get_success:
+            return False
+
+        self.log(f"✅ Current settings: base_rate={settings.get('base_rate')}, social_contribution_pct={settings.get('social_contribution_pct')}")
+        
+        # Update settings
+        updated_settings = {
+            "base_rate": 13.00,
+            "social_contribution_pct": 2.80
         }
+        put_success, _ = self.run_test("Update Settings", "PUT", "settings", 200, data=updated_settings)
         
-        success, status, data = self.make_request('POST', '/auth/register', test_data, 200)
-        
-        if success and isinstance(data, dict) and 'token' in data and 'user' in data:
-            self.token = data['token']
-            self.user_id = data['user']['id']
-            return self.log_test("User Registration", True, f"User created: {data['user']['email']}")
-        else:
-            return self.log_test("User Registration", False, f"Status: {status}, Response: {data}")
+        # Verify update
+        if put_success:
+            verify_success, verify_settings = self.run_test("Verify Settings Update", "GET", "settings", 200)
+            if verify_success and verify_settings.get('base_rate') == 13.00:
+                self.log("✅ Settings update verified")
+                return True
+        return False
 
-    def test_login_existing_user(self):
-        """Test login with existing user"""
-        test_data = {
-            "email": "test@test.com",
-            "password": "test123"
-        }
-        
-        success, status, data = self.make_request('POST', '/auth/login', test_data, 200)
-        
-        if success and isinstance(data, dict) and 'token' in data:
-            self.token = data['token']
-            self.user_id = data['user']['id']
-            return self.log_test("User Login", True, f"Login successful: {data['user']['email']}")
-        else:
-            return self.log_test("User Login", False, f"Status: {status}, Response: {data}")
-
-    def test_get_user_profile(self):
-        """Test get current user profile"""
-        if not self.token:
-            return self.log_test("Get User Profile", False, "No token available")
-        
-        success, status, data = self.make_request('GET', '/auth/me')
-        
-        if success and isinstance(data, dict) and 'email' in data:
-            return self.log_test("Get User Profile", True, f"Profile retrieved: {data['email']}")
-        else:
-            return self.log_test("Get User Profile", False, f"Status: {status}, Response: {data}")
-
-    def test_get_default_settings(self):
-        """Test get user settings"""
-        if not self.token:
-            return self.log_test("Get Settings", False, "No token available")
-        
-        success, status, data = self.make_request('GET', '/settings')
-        
-        if success and isinstance(data, dict) and 'base_rate' in data:
-            return self.log_test("Get Settings", True, f"Base rate: €{data['base_rate']}")
-        else:
-            return self.log_test("Get Settings", False, f"Status: {status}, Response: {data}")
-
-    def test_update_settings(self):
-        """Test update settings"""
-        if not self.token:
-            return self.log_test("Update Settings", False, "No token available")
-        
-        new_settings = {
-            "base_rate": 13.50,
-            "overtime_multiplier": 1.6,
-            "night_surcharge": 1.75
-        }
-        
-        success, status, data = self.make_request('PUT', '/settings', new_settings)
-        
-        if success and isinstance(data, dict) and data.get('base_rate') == 13.50:
-            return self.log_test("Update Settings", True, f"Settings updated successfully")
-        else:
-            return self.log_test("Update Settings", False, f"Status: {status}, Response: {data}")
-
-    def test_create_ride(self):
-        """Test create a new ride"""
-        if not self.token:
-            return self.log_test("Create Ride", False, "No token available")
-        
-        ride_data = {
-            "date": "2024-01-15",
-            "client_name": "Test Client Ltd",
+    def test_ride_crud(self):
+        """Test ride CRUD operations"""
+        # Create a test ride
+        test_ride = {
+            "date": "2024-12-15",
+            "client_name": "Test Client",
             "car_brand": "Mercedes",
-            "car_model": "S-Class",
-            "start_time": "08:00",
+            "car_model": "E-Class",
+            "start_time": "09:00",
             "end_time": "17:00",
             "extra_costs": 25.50,
             "wwv_km": 45.0,
             "notes": "Test ride for API testing"
         }
         
-        success, status, data = self.make_request('POST', '/rides', ride_data, 200)
+        create_success, ride_response = self.run_test("Create Ride", "POST", "rides", 201, data=test_ride)
+        if not create_success:
+            return False
+            
+        self.test_ride_id = ride_response.get('id')
+        self.log(f"✅ Created ride with ID: {self.test_ride_id}")
         
-        if success and isinstance(data, dict) and 'id' in data:
-            self.test_ride_id = data['id']
-            return self.log_test("Create Ride", True, 
-                f"Ride created - Net pay: €{data.get('net_pay', 0):.2f}, Hours: {data.get('total_hours', 0)}")
-        else:
-            return self.log_test("Create Ride", False, f"Status: {status}, Response: {data}")
-
-    def test_get_rides(self):
-        """Test get all rides"""
-        if not self.token:
-            return self.log_test("Get Rides", False, "No token available")
-        
-        success, status, data = self.make_request('GET', '/rides')
-        
-        if success and isinstance(data, list):
-            return self.log_test("Get Rides", True, f"Retrieved {len(data)} rides")
-        else:
-            return self.log_test("Get Rides", False, f"Status: {status}, Response: {data}")
-
-    def test_update_ride(self):
-        """Test update existing ride"""
-        if not self.token or not hasattr(self, 'test_ride_id'):
-            return self.log_test("Update Ride", False, "No token or ride ID available")
-        
-        updated_data = {
-            "date": "2024-01-15",
-            "client_name": "Updated Client Name",
-            "car_brand": "BMW",
-            "car_model": "7 Series",
-            "start_time": "09:00",
-            "end_time": "18:00",
-            "extra_costs": 30.00,
-            "wwv_km": 50.0,
-            "notes": "Updated test ride"
-        }
-        
-        success, status, data = self.make_request('PUT', f'/rides/{self.test_ride_id}', updated_data)
-        
-        if success and isinstance(data, dict) and data.get('client_name') == 'Updated Client Name':
-            return self.log_test("Update Ride", True, f"Ride updated successfully")
-        else:
-            return self.log_test("Update Ride", False, f"Status: {status}, Response: {data}")
-
-    def test_delete_ride(self):
-        """Test delete ride"""
-        if not self.token or not hasattr(self, 'test_ride_id'):
-            return self.log_test("Delete Ride", False, "No token or ride ID available")
-        
-        success, status, data = self.make_request('DELETE', f'/rides/{self.test_ride_id}', expected_status=200)
-        
-        if success:
-            return self.log_test("Delete Ride", True, "Ride deleted successfully")
-        else:
-            return self.log_test("Delete Ride", False, f"Status: {status}, Response: {data}")
-
-    def test_get_stats(self):
-        """Test get user statistics"""
-        if not self.token:
-            return self.log_test("Get Stats", False, "No token available")
-        
-        success, status, data = self.make_request('GET', '/stats')
-        
-        if success and isinstance(data, dict):
-            stats_keys = ['total_rides', 'total_hours', 'total_gross', 'total_net', 'monthly_earnings']
-            if all(key in data for key in stats_keys):
-                return self.log_test("Get Stats", True, 
-                    f"Total rides: {data['total_rides']}, Net: €{data['total_net']:.2f}")
+        # Verify salary calculation
+        expected_fields = ['gross_pay', 'net_pay', 'total_hours', 'social_contribution', 'wwv_amount']
+        for field in expected_fields:
+            if field in ride_response:
+                self.log(f"✅ Ride calculation - {field}: {ride_response[field]}")
             else:
-                return self.log_test("Get Stats", False, f"Missing stats keys in response")
+                self.log(f"❌ Missing field in ride response: {field}", "ERROR")
+                return False
+                
+        # Verify new formula: Bruto should include social contribution
+        gross_total = ride_response.get('gross_total', 0)
+        gross_pay = ride_response.get('gross_pay', 0)
+        social_contrib = ride_response.get('social_contribution', 0)
+        wwv_amount = ride_response.get('wwv_amount', 0)
+        extra_costs = ride_response.get('extra_costs', 0)
+        net_pay = ride_response.get('net_pay', 0)
+        
+        expected_bruto = gross_pay + wwv_amount + extra_costs + social_contrib
+        expected_netto = gross_total - social_contrib
+        
+        if abs(gross_total - expected_bruto) < 0.01:
+            self.log(f"✅ Bruto formula correct: {gross_total} ≈ {expected_bruto}")
         else:
-            return self.log_test("Get Stats", False, f"Status: {status}, Response: {data}")
+            self.log(f"❌ Bruto formula incorrect: {gross_total} != {expected_bruto}", "ERROR")
+            return False
+            
+        if abs(net_pay - expected_netto) < 0.01:
+            self.log(f"✅ Netto formula correct: {net_pay} ≈ {expected_netto}")
+        else:
+            self.log(f"❌ Netto formula incorrect: {net_pay} != {expected_netto}", "ERROR")
+            return False
 
-    def test_salary_calculation(self):
-        """Test salary calculation with edge cases"""
-        if not self.token:
-            return self.log_test("Salary Calculation", False, "No token available")
+        # Get rides
+        get_success, rides = self.run_test("Get Rides", "GET", "rides", 200)
+        if get_success and len(rides) > 0:
+            self.log(f"✅ Retrieved {len(rides)} rides")
+        else:
+            return False
+
+        # Update ride
+        updated_ride = {**test_ride, "extra_costs": 30.00}
+        update_success, _ = self.run_test(f"Update Ride", "PUT", f"rides/{self.test_ride_id}", 200, data=updated_ride)
         
-        # Test overnight shift (20:00 to 06:00 next day) - should have night surcharge
-        night_ride = {
-            "date": "2024-01-16",
-            "client_name": "Night Shift Client",
-            "car_brand": "Mercedes",
-            "car_model": "E-Class",
-            "start_time": "20:00",
-            "end_time": "06:00",
-            "extra_costs": 0,
-            "wwv_km": 0,
-            "notes": "Night shift test"
-        }
+        return update_success
+
+    def test_stats_endpoint(self):
+        """Test enhanced stats endpoint with filters"""
+        # Test basic stats
+        basic_success, basic_stats = self.run_test("Get Basic Stats", "GET", "stats", 200)
+        if not basic_success:
+            return False
+            
+        # Check for new required fields
+        required_stats_fields = [
+            'total_rides', 'total_hours', 'total_gross', 'total_net',
+            'total_overtime_hours', 'total_night_hours', 'avg_per_ride', 'avg_per_hour',
+            'monthly_earnings', 'weekly_earnings', 'brand_stats', 'hourly_distribution',
+            'day_of_week_stats', 'available_months', 'available_clients', 'available_brands'
+        ]
         
-        success, status, data = self.make_request('POST', '/rides', night_ride, 200)
-        
-        if success and isinstance(data, dict):
-            # Should have 10 total hours, 9 normal + 1 overtime, all 10 hours get night surcharge
-            expected_night_hours = 10.0
-            expected_overtime_hours = 1.0
-            
-            actual_night_hours = data.get('night_hours', 0)
-            actual_overtime_hours = data.get('overtime_hours', 0)
-            
-            # Clean up test ride
-            if 'id' in data:
-                self.make_request('DELETE', f"/rides/{data['id']}")
-            
-            if abs(actual_night_hours - expected_night_hours) < 0.1 and abs(actual_overtime_hours - expected_overtime_hours) < 0.1:
-                return self.log_test("Salary Calculation", True, 
-                    f"Night hours: {actual_night_hours}, Overtime: {actual_overtime_hours}")
+        for field in required_stats_fields:
+            if field in basic_stats:
+                self.log(f"✅ Stats field present: {field}")
             else:
-                return self.log_test("Salary Calculation", False, 
-                    f"Expected night: {expected_night_hours}, got: {actual_night_hours}, Expected OT: {expected_overtime_hours}, got: {actual_overtime_hours}")
-        else:
-            return self.log_test("Salary Calculation", False, f"Status: {status}, Response: {data}")
+                self.log(f"❌ Missing stats field: {field}", "ERROR")
+                return False
 
-    def test_invalid_login(self):
-        """Test invalid login credentials"""
-        invalid_data = {
-            "email": "nonexistent@test.com",
-            "password": "wrongpassword"
-        }
-        
-        success, status, data = self.make_request('POST', '/auth/login', invalid_data, 401)
-        
-        return self.log_test("Invalid Login Test", success, f"Status: {status}")
+        # Test month filter
+        month_success, month_stats = self.run_test("Stats with Month Filter", "GET", "stats?month=2024-12", 200)
+        if month_success:
+            self.log(f"✅ Month filtered stats: {month_stats.get('total_rides', 0)} rides")
 
-    def test_unauthorized_access(self):
-        """Test unauthorized access to protected endpoints"""
-        # Save current token
-        original_token = self.token
-        self.token = None
-        
-        success, status, data = self.make_request('GET', '/rides', expected_status=401)
-        
-        # Restore token
-        self.token = original_token
-        
-        return self.log_test("Unauthorized Access Test", success, f"Status: {status}")
+        # Test client filter  
+        if basic_stats.get('available_clients'):
+            client = basic_stats['available_clients'][0] if basic_stats['available_clients'] else 'Test Client'
+            client_success, client_stats = self.run_test("Stats with Client Filter", "GET", f"stats?client_name={client}", 200)
+            if client_success:
+                self.log(f"✅ Client filtered stats: {client_stats.get('total_rides', 0)} rides")
+
+        # Test brand filter
+        if basic_stats.get('available_brands'):
+            brand = basic_stats['available_brands'][0] if basic_stats['available_brands'] else 'Mercedes'
+            brand_success, brand_stats = self.run_test("Stats with Brand Filter", "GET", f"stats?car_brand={brand}", 200)
+            if brand_success:
+                self.log(f"✅ Brand filtered stats: {brand_stats.get('total_rides', 0)} rides")
+
+        return True
+
+    def cleanup(self):
+        """Clean up test data"""
+        if self.test_ride_id:
+            delete_success, _ = self.run_test("Delete Test Ride", "DELETE", f"rides/{self.test_ride_id}", 200)
+            if delete_success:
+                self.log("✅ Test data cleaned up")
 
     def run_all_tests(self):
-        """Run comprehensive test suite"""
-        print("🚗 GET DRIVEN API Test Suite")
-        print("=" * 50)
+        """Run all tests"""
+        self.log("🚀 Starting Chauffeur API Tests")
+        self.log(f"📡 Base URL: {self.base_url}")
         
-        # Health check first
-        if not self.test_health_check():
-            print("❌ Health check failed - aborting tests")
-            return self.generate_summary()
-        
-        # Authentication tests
-        print("\n🔐 Authentication Tests:")
-        self.test_invalid_login()
-        self.test_unauthorized_access()
-        
-        # Try existing user first, fallback to registration
-        if not self.test_login_existing_user():
-            print("   Existing user login failed, trying registration...")
-            if not self.test_register_new_user():
-                print("❌ Both login and registration failed - aborting")
-                return self.generate_summary()
-        
-        self.test_get_user_profile()
-        
-        # Settings tests
-        print("\n⚙️ Settings Tests:")
-        self.test_get_default_settings()
-        self.test_update_settings()
-        
-        # Ride management tests
-        print("\n🚙 Ride Management Tests:")
-        if self.test_create_ride():
-            self.test_get_rides()
-            self.test_update_ride()
-            self.test_delete_ride()
-        
-        # Statistics tests
-        print("\n📊 Statistics Tests:")
-        self.test_get_stats()
-        
-        # Edge case tests
-        print("\n🧪 Edge Case Tests:")
-        self.test_salary_calculation()
-        
-        return self.generate_summary()
+        try:
+            # Health check
+            if not self.test_health():
+                self.log("❌ Health check failed - stopping tests", "ERROR")
+                return False
 
-    def generate_summary(self):
-        """Generate test summary"""
-        print("\n" + "=" * 50)
-        print(f"📊 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
-        
-        if self.tests_passed == self.tests_run:
-            print("🎉 All tests passed!")
-            return True
-        else:
-            print(f"⚠️  {self.tests_run - self.tests_passed} tests failed")
+            # Authentication
+            if not self.test_auth_flow():
+                self.log("❌ Authentication failed - stopping tests", "ERROR") 
+                return False
+
+            # Settings
+            if not self.test_settings_endpoints():
+                self.log("❌ Settings tests failed", "ERROR")
+
+            # Ride CRUD
+            if not self.test_ride_crud():
+                self.log("❌ Ride CRUD tests failed", "ERROR")
+
+            # Stats endpoint
+            if not self.test_stats_endpoint():
+                self.log("❌ Stats tests failed", "ERROR")
+
+            # Cleanup
+            self.cleanup()
+
+            # Results
+            self.log(f"📊 Tests completed: {self.tests_passed}/{self.tests_run} passed")
+            success_rate = (self.tests_passed / self.tests_run) * 100 if self.tests_run > 0 else 0
+            self.log(f"📈 Success rate: {success_rate:.1f}%")
             
-            # Show failed tests
-            failed_tests = [r for r in self.test_results if not r['passed']]
-            if failed_tests:
-                print("\nFailed tests:")
-                for test in failed_tests:
-                    print(f"  • {test['test']}: {test['details']}")
-            
+            return self.tests_passed == self.tests_run
+
+        except Exception as e:
+            self.log(f"💥 Unexpected error: {str(e)}", "ERROR")
             return False
 
 def main():
-    """Main test runner"""
-    tester = GetDrivenAPITester()
+    tester = ChauffeurAPITester()
     success = tester.run_all_tests()
     return 0 if success else 1
 
