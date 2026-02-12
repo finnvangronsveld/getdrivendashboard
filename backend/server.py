@@ -237,9 +237,8 @@ async def create_ride(ride: RideInput, current_user: dict = Depends(get_current_
     return ride_doc
 
 @api_router.get("/rides")
-async def get_rides(authorization: str = None, month: Optional[str] = None):
-    payload = await get_current_user(authorization)
-    query = {"user_id": payload["user_id"]}
+async def get_rides(current_user: dict = Depends(get_current_user), month: Optional[str] = None):
+    query = {"user_id": current_user["user_id"]}
     if month:
         query["date"] = {"$regex": f"^{month}"}
     rides = await db.rides.find(query, {"_id": 0}).sort("date", -1).to_list(1000)
