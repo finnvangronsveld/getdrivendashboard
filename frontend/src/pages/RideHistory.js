@@ -126,11 +126,11 @@ export default function RideHistory() {
             <p>Geen ritten gevonden</p>
           </div>
         ) : (
-          <div className="space-y-14">
+          <div className="space-y-16">
             {groupedByMonth.map(({ key, label, rides: monthRides, net, hours }) => (
               <div key={key} data-testid={`month-group-${key}`}>
                 {/* Month Header */}
-                <div className="flex items-center justify-between mb-5 pb-3 border-b border-[#27272A]">
+                <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#27272A]">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-[#D9F99D]" />
                     <h2 className="text-white text-base font-semibold" style={{ fontFamily: 'Chivo, sans-serif' }}>{label}</h2>
@@ -143,7 +143,7 @@ export default function RideHistory() {
                 </div>
 
                 {/* Month Rides */}
-                <div className="space-y-5">
+                <div className="flex flex-col gap-4">
                   {monthRides.map((ride) => (
               <div
                 key={ride.id}
@@ -152,7 +152,7 @@ export default function RideHistory() {
               >
                 {/* Main Row */}
                 <div
-                  className="flex items-center justify-between p-4 cursor-pointer"
+                  className="flex items-center justify-between p-5 cursor-pointer"
                   onClick={() => setExpandedId(expandedId === ride.id ? null : ride.id)}
                 >
                   <div className="flex items-center gap-4">
