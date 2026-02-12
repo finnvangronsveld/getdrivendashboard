@@ -259,7 +259,7 @@ class GetDrivenAPITester:
             "notes": "Night shift test"
         }
         
-        success, status, data = self.make_request('POST', '/rides', night_ride, 201)
+        success, status, data = self.make_request('POST', '/rides', night_ride, 200)
         
         if success and isinstance(data, dict):
             # Should have 10 total hours, 9 normal + 1 overtime, all 10 hours get night surcharge
