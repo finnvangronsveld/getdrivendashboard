@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Link } from 'react-router-dom';
-import { Trash2, Edit2, Car, Clock, Euro, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { Trash2, Edit2, Clock, Euro, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { toast } from 'sonner';
+import CarBrandLogo from '@/components/CarBrandLogo';
 
 export default function RideHistory() {
   const { axiosAuth } = useAuth();
@@ -44,7 +45,6 @@ export default function RideHistory() {
     r.date.includes(searchTerm)
   );
 
-  // Calculate totals
   const totalNet = filtered.reduce((s, r) => s + (r.net_pay || 0), 0);
   const totalHours = filtered.reduce((s, r) => s + (r.total_hours || 0), 0);
 
@@ -101,7 +101,6 @@ export default function RideHistory() {
         {/* Rides List */}
         {filtered.length === 0 ? (
           <div className="text-center py-20 text-zinc-600">
-            <Car className="w-12 h-12 mx-auto mb-4 text-zinc-700" />
             <p>Geen ritten gevonden</p>
           </div>
         ) : (
@@ -118,9 +117,7 @@ export default function RideHistory() {
                   onClick={() => setExpandedId(expandedId === ride.id ? null : ride.id)}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-[#D9F99D]/10 flex items-center justify-center flex-shrink-0">
-                      <Car className="w-5 h-5 text-[#D9F99D]" />
-                    </div>
+                    <CarBrandLogo brand={ride.car_brand} />
                     <div>
                       <p className="text-white text-sm font-medium">{ride.client_name}</p>
                       <p className="text-zinc-500 text-xs mt-0.5">
@@ -144,18 +141,43 @@ export default function RideHistory() {
                 {/* Expanded Details */}
                 {expandedId === ride.id && (
                   <div className="border-t border-[#1a1a1e] px-4 py-4 animate-slideDown" data-testid={`ride-details-${ride.id}`}>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                      <DetailItem label="Normaal" value={`${ride.normal_hours}u`} sub={`€${ride.normal_pay?.toFixed(2)}`} />
-                      <DetailItem label="Overuren" value={`${ride.overtime_hours}u`} sub={`€${ride.overtime_pay?.toFixed(2)}`} />
-                      <DetailItem label="Nachturen" value={`${ride.night_hours}u`} sub={`€${ride.night_pay?.toFixed(2)}`} />
-                      <DetailItem label="Bruto" value={`€${ride.gross_pay?.toFixed(2)}`} sub="" />
+                    {/* Salary Breakdown */}
+                    <div className="mb-4">
+                      <p className="text-zinc-500 text-xs uppercase tracking-wide mb-3">Loon Breakdown</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <DetailItem label="Normaal" value={`${ride.normal_hours}u`} sub={`€${ride.normal_pay?.toFixed(2)}`} />
+                        <DetailItem label="Overuren" value={`${ride.overtime_hours}u`} sub={`€${ride.overtime_pay?.toFixed(2)}`} />
+                        <DetailItem label="Nachturen" value={`${ride.night_hours}u`} sub={`€${ride.night_pay?.toFixed(2)}`} />
+                        <DetailItem label="Uurloon Totaal" value={`€${ride.gross_pay?.toFixed(2)}`} sub={`${ride.total_hours}u gewerkt`} />
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                      <DetailItem label="Sociale Bijdrage" value={`-€${ride.social_contribution?.toFixed(2)}`} sub="" />
-                      <DetailItem label="WWV" value={`+€${ride.wwv_amount?.toFixed(2)}`} sub={`${ride.wwv_km}km`} />
-                      <DetailItem label="Extra Kosten" value={`+€${ride.extra_costs?.toFixed(2)}`} sub="" />
-                      <DetailItem label="Netto" value={`€${ride.net_pay?.toFixed(2)}`} sub="" highlight />
+
+                    {/* Bruto / Netto */}
+                    <div className="mb-4 p-3 bg-[#09090B] rounded-lg border border-[#1a1a1e]">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                        <div>
+                          <p className="text-zinc-500 text-xs mb-1">WWV</p>
+                          <p className="text-green-400 font-mono">+€{ride.wwv_amount?.toFixed(2)} <span className="text-zinc-600 text-xs">({ride.wwv_km}km)</span></p>
+                        </div>
+                        <div>
+                          <p className="text-zinc-500 text-xs mb-1">Extra Kosten</p>
+                          <p className="text-green-400 font-mono">+€{ride.extra_costs?.toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-zinc-500 text-xs mb-1">Bruto</p>
+                          <p className="text-white font-mono font-medium">€{(ride.gross_total || ride.gross_pay)?.toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-zinc-500 text-xs mb-1">Sociale Bijdrage</p>
+                          <p className="text-red-400 font-mono">-€{ride.social_contribution?.toFixed(2)}</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-[#27272A] flex justify-between items-center">
+                        <span className="text-zinc-400 text-sm font-medium">Netto Uitbetaling</span>
+                        <span className="text-[#D9F99D] font-mono font-bold text-lg">€{ride.net_pay?.toFixed(2)}</span>
+                      </div>
                     </div>
+
                     {ride.notes && (
                       <p className="text-zinc-500 text-xs mb-4">Opmerking: {ride.notes}</p>
                     )}
