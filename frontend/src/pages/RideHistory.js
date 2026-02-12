@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Link } from 'react-router-dom';
-import { Trash2, Edit2, Clock, Euro, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { Trash2, Edit2, Clock, Euro, ChevronDown, ChevronUp, Search, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import CarBrandLogo from '@/components/CarBrandLogo';
 
