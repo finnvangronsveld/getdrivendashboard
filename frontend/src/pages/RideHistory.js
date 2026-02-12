@@ -143,7 +143,7 @@ export default function RideHistory() {
                 </div>
 
                 {/* Month Rides */}
-                <div className="space-y-2">
+                <div className="space-y-4">
                   {monthRides.map((ride) => (
               <div
                 key={ride.id}
