@@ -1,0 +1,99 @@
+{
+  "brand_identity": {
+    "name": "Get Driven Calculator",
+    "tone": "Elite, Precision, Nocturnal, High-Performance",
+    "theme_mode": "dark",
+    "design_principles": [
+      "Nocturnal Visibility: High contrast elements against deep blacks.",
+      "Dashboard Precision: Data should look like a car's instrument cluster.",
+      "Glowing Interactions: Interactive elements should glow like dashboard lights.",
+      "Belgian Compliance: Strict adherence to Belgian salary logic in UI flow."
+    ]
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Chivo, Unbounded, or Syne (Wide, Bold, Futuristic)",
+      "body": "Manrope or Space Grotesk (Legible, Technical)",
+      "mono": "JetBrains Mono or Fira Code (For financial data)"
+    },
+    "scale": {
+      "h1": "text-5xl md:text-7xl font-black tracking-tighter uppercase",
+      "h2": "text-3xl md:text-4xl font-bold tracking-tight",
+      "h3": "text-xl md:text-2xl font-semibold tracking-wide",
+      "body": "text-base leading-relaxed text-zinc-400",
+      "caption": "text-sm font-medium tracking-widest text-zinc-500 uppercase",
+      "data": "text-lg font-mono font-medium text-white"
+    }
+  },
+  "colors": {
+    "palette": {
+      "background": "#050505",
+      "surface": "#0F0F11",
+      "surface_highlight": "#18181B",
+      "border": "#27272A",
+      "primary": "#D9F99D",
+      "primary_glow": "0 0 20px rgba(217, 249, 157, 0.5)",
+      "secondary": "#FFFFFF",
+      "text_primary": "#FFFFFF",
+      "text_secondary": "#A1A1AA",
+      "accent_alert": "#EF4444",
+      "accent_success": "#D9F99D"
+    },
+    "gradients": {
+      "hero_overlay": "linear-gradient(to bottom, rgba(5,5,5,0) 0%, #050505 100%)",
+      "card_surface": "linear-gradient(145deg, #0F0F11 0%, #09090B 100%)",
+      "glow_text": "drop-shadow(0 0 8px rgba(217, 249, 157, 0.4))"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#D9F99D] text-black font-bold hover:bg-[#BEF264] hover:shadow-[0_0_15px_rgba(217,249,157,0.4)] transition-all duration-300 rounded-none skew-x-[-10deg] px-8",
+      "secondary": "bg-transparent border border-[#27272A] text-white hover:border-[#D9F99D] hover:text-[#D9F99D] transition-all duration-300 rounded-none skew-x-[-10deg] px-8",
+      "ghost": "text-zinc-400 hover:text-white hover:bg-white/5 transition-colors rounded-md"
+    },
+    "cards": {
+      "base": "bg-[#0F0F11] border border-[#27272A] p-6 rounded-xl hover:border-[#D9F99D]/30 transition-colors shadow-2xl relative overflow-hidden",
+      "stat_card": "flex flex-col gap-2 bg-[#0F0F11]/80 backdrop-blur-md border border-[#27272A] p-6 rounded-xl"
+    },
+    "inputs": {
+      "default": "bg-[#09090B] border border-[#27272A] text-white focus:border-[#D9F99D] focus:ring-1 focus:ring-[#D9F99D] h-12 rounded-lg px-4 placeholder:text-zinc-600 transition-all"
+    }
+  },
+  "layout_strategies": {
+    "landing_page": {
+      "structure": "Hero section with full-screen background image, heavy bottom gradient fade. Centered typography with 'glowing' effect. Floating 'Login' card glassmorphism.",
+      "grid": "Simple 1-column mobile, 2-column desktop for features."
+    },
+    "dashboard": {
+      "structure": "Sidebar or Top-nav (mobile). Grid layout for 'Stat Cards'. Large chart area. List of recent rides below.",
+      "grid": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "backdrop-blur-xl bg-black/40 border border-white/10",
+    "glow_effects": "Use box-shadow or drop-shadow to create 'neon' light bleed on active elements.",
+    "borders": "1px solid #27272A. Active borders: #D9F99D.",
+    "icons": "Use Lucide React icons. Stroke width: 1.5px. Size: 20px or 24px."
+  },
+  "image_urls": {
+    "hero_background": "https://images.unsplash.com/photo-1620043210840-64aad601b7b7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzN8MHwxfHNlYXJjaHwxfHxjaGF1ZmZldXIlMjBkcml2aW5nJTIwbHV4dXJ5JTIwY2FyJTIwbmlnaHR8ZW58MHx8fHwxNzcwODkyNDYyfDA&ixlib=rb-4.1.0&q=85",
+    "dashboard_bg": "https://images.unsplash.com/photo-1679976944444-67a19623af9e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzN8MHwxfHNlYXJjaHwyfHxjaGF1ZmZldXIlMjBkcml2aW5nJTIwbHV4dXJ5JTIwY2FyJTIwbmlnaHR8ZW58MHx8fHwxNzcwODkyNDYyfDA&ixlib=rb-4.1.0&q=85",
+    "auth_bg": "https://images.unsplash.com/photo-1639060015191-9d83063eab2a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODd8MHwxfHNlYXJjaHwyfHxsdXh1cnklMjBjYXIlMjBkYXNoYm9hcmQlMjBuaWdodCUyMGludGVyZmFjZXxlbnwwfHx8fDE3NzA4OTI0NjN8MA&ixlib=rb-4.1.0&q=85"
+  },
+  "instructions_to_main_agent": [
+    "Install 'recharts' for the earnings chart: `npm install recharts` or `yarn add recharts`.",
+    "Install 'date-fns' for date manipulation: `npm install date-fns`.",
+    "Use the dark theme class strategy configured in Tailwind.",
+    "Implement the 'Add Ride' form with a step-by-step or clean grid layout to avoid clutter.",
+    "Ensure the salary calculation logic (9h rule, 150% overtime, night surcharge) is robust and tested.",
+    "Use the 'sonner' toast library for feedback on adding rides.",
+    "Create a 'Settings' page to allow the user to tweak the rates (Future proofing)."
+  ],
+  "universal_guidelines": [
+    "Always use 'dark' class on the root html/body.",
+    "Do not use gradients for backgrounds, use solid deep blacks or very subtle radial gradients.",
+    "Text must be legible. Use text-zinc-400 for labels and text-white for values.",
+    "Interactive elements must have a hover state that brightens them.",
+    "Use 'data-testid' for all interactive elements."
+  ]
+}
