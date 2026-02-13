@@ -12,7 +12,7 @@ import jwt
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.cors import CORSMiddleware
 
@@ -644,6 +644,93 @@ async def get_stats(
         "available_months": available_months,
         "available_clients": available_clients,
         "available_brands": available_brands,
+    }
+
+
+@api_router.get("/leaderboard")
+async def get_leaderboard(
+    metric: str = "net",
+    period: str = "all",
+    month: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    session: AsyncSession = Depends(get_session),
+):
+    from datetime import datetime as dt, timedelta
+
+    metric = metric.lower()
+    period = period.lower()
+
+    if period == "last_month":
+        today = dt.now(timezone.utc)
+        first_of_month = dt(today.year, today.month, 1)
+        last_month_end = first_of_month - timedelta(days=1)
+        month = last_month_end.strftime("%Y-%m")
+        period = "month"
+
+    if period == "month" and not month:
+        raise HTTPException(status_code=400, detail="Month is required")
+    if period == "custom" and (not date_from or not date_to):
+        raise HTTPException(status_code=400, detail="date_from and date_to are required")
+
+    metric_map = {
+        "hours": func.coalesce(func.sum(Ride.total_hours), 0).label("metric"),
+        "net": func.coalesce(func.sum(Ride.net_pay), 0).label("metric"),
+        "gross": func.coalesce(func.sum(Ride.gross_total), 0).label("metric"),
+        "rides": func.count(Ride.id).label("metric"),
+    }
+    if metric not in metric_map:
+        raise HTTPException(status_code=400, detail="Invalid metric")
+
+    total_hours = func.coalesce(func.sum(Ride.total_hours), 0).label("hours")
+    total_net = func.coalesce(func.sum(Ride.net_pay), 0).label("net")
+    total_gross = func.coalesce(func.sum(Ride.gross_total), 0).label("gross")
+    total_rides = func.count(Ride.id).label("rides")
+
+    query = (
+        select(
+            User.id,
+            User.name,
+            User.email,
+            total_hours,
+            total_net,
+            total_gross,
+            total_rides,
+            metric_map[metric],
+        )
+        .join(Ride, Ride.user_id == User.id, isouter=True)
+        .group_by(User.id, User.name, User.email)
+    )
+
+    if period == "month" and month:
+        query = query.where(Ride.date.like(f"{month}%"))
+    elif period == "custom":
+        query = query.where(Ride.date >= date_from, Ride.date <= date_to)
+
+    query = query.order_by(desc("metric"), User.name.asc())
+
+    rows = (await session.execute(query)).all()
+    leaderboard = [
+        {
+            "user_id": row.id,
+            "name": row.name,
+            "email": row.email,
+            "hours": round(float(row.hours or 0), 2),
+            "net": round(float(row.net or 0), 2),
+            "gross": round(float(row.gross or 0), 2),
+            "rides": int(row.rides or 0),
+            "metric": round(float(row.metric or 0), 2) if metric != "rides" else int(row.metric or 0),
+        }
+        for row in rows
+    ]
+
+    return {
+        "metric": metric,
+        "period": period,
+        "month": month,
+        "date_from": date_from,
+        "date_to": date_to,
+        "rows": leaderboard,
     }
 
 

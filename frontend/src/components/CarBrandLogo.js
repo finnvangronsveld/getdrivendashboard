@@ -112,9 +112,9 @@ export default function CarBrandLogo({ brand, size = 'md', className = '' }) {
   const key = brand.toLowerCase().trim();
 
   const sizes = {
-    sm: { box: 'w-8 h-8', img: 'w-5 h-5', text: 'text-[10px]' },
-    md: { box: 'w-10 h-10', img: 'w-6 h-6', text: 'text-xs' },
-    lg: { box: 'w-14 h-14', img: 'w-9 h-9', text: 'text-base' },
+    sm: { box: 'w-10 h-10', img: 'w-6 h-6', text: 'text-xs' },
+    md: { box: 'w-12 h-12', img: 'w-8 h-8', text: 'text-sm' },
+    lg: { box: 'w-16 h-16', img: 'w-11 h-11', text: 'text-base' },
   };
   const s = sizes[size] || sizes.md;
 

@@ -23,7 +23,7 @@ export default function LandingPage() {
         <div className="flex items-center gap-3 mb-8 opacity-0 animate-fadeInUp" data-testid="landing-logo">
           <Car className="w-10 h-10 text-[#D9F99D] glow-lime-text" />
           <span className="text-zinc-500 text-sm font-medium tracking-[0.3em] uppercase" style={{ fontFamily: 'Chivo, sans-serif' }}>
-            Chauffeur Tools
+            Driver Tools
           </span>
         </div>
 
@@ -35,21 +35,21 @@ export default function LandingPage() {
         >
           <span className="text-white">GET DRIVEN</span>
           <br />
-          <span className="text-[#D9F99D] glow-lime-text">LOON CALCULATOR</span>
+          <span className="text-[#D9F99D] glow-lime-text">DASHBOARD</span>
         </h1>
 
         {/* Subtitle */}
         <p className="text-zinc-400 text-base sm:text-lg text-center max-w-md mb-12 opacity-0 animate-fadeInUp stagger-2">
-          Bereken je loon, track je ritten en houd overzicht van je verdiensten als privechauffeur.
+          Bereken je loon, track je ritten en houd overzicht van je verdiensten als privedriver.
         </p>
 
         {/* CTA Button */}
         <button
           onClick={() => navigate('/auth')}
           data-testid="landing-cta-button"
-          className="group flex items-center gap-3 bg-[#D9F99D] text-black font-bold px-8 py-4 rounded-none skew-x-[-10deg] hover:bg-[#BEF264] hover:shadow-[0_0_30px_rgba(217,249,157,0.4)] transition-all duration-300 opacity-0 animate-fadeInUp stagger-3"
+          className="group flex items-center gap-3 bg-[#D9F99D] text-black font-bold not-italic px-8 py-4 rounded-none skew-x-[-10deg] hover:bg-[#BEF264] hover:shadow-[0_0_30px_rgba(217,249,157,0.4)] transition-all duration-300 opacity-0 animate-fadeInUp stagger-3"
         >
-          <span className="skew-x-[10deg] flex items-center gap-2 text-lg">
+          <span className="skew-x-[10deg] flex items-center gap-2 text-lg not-italic">
             Aan de slag
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </span>

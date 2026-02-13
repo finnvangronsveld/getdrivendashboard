@@ -9,6 +9,7 @@ import Dashboard from "@/pages/Dashboard";
 import AddRide from "@/pages/AddRide";
 import RideHistory from "@/pages/RideHistory";
 import Settings from "@/pages/Settings";
+import Leaderboards from "@/pages/Leaderboards";
 import Navbar from "@/components/Navbar";
 
 function ProtectedRoute({ children }) {
@@ -39,6 +40,7 @@ function AppRoutes() {
       <Route path="/rides/add" element={<ProtectedRoute><Navbar /><AddRide /></ProtectedRoute>} />
       <Route path="/rides/edit/:rideId" element={<ProtectedRoute><Navbar /><AddRide /></ProtectedRoute>} />
       <Route path="/rides" element={<ProtectedRoute><Navbar /><RideHistory /></ProtectedRoute>} />
+      <Route path="/leaderboards" element={<ProtectedRoute><Navbar /><Leaderboards /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Navbar /><Settings /></ProtectedRoute>} />
     </Routes>
   );

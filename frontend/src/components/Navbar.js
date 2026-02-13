@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { LayoutDashboard, PlusCircle, List, Settings, LogOut, Car } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, List, Settings, LogOut, Car, Trophy } from 'lucide-react';
 
 export default function Navbar() {
   const { logout, user } = useAuth();
@@ -11,6 +11,7 @@ export default function Navbar() {
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/rides/add', label: 'Rit Toevoegen', icon: PlusCircle },
     { to: '/rides', label: 'Ritten', icon: List },
+    { to: '/leaderboards', label: 'Leaderboards', icon: Trophy },
     { to: '/settings', label: 'Instellingen', icon: Settings },
   ];
 
