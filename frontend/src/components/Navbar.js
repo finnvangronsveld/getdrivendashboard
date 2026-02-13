@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { LayoutDashboard, PlusCircle, List, Settings, LogOut, Car, Trophy } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, List, Settings, LogOut, Trophy } from 'lucide-react';
 
 export default function Navbar() {
   const { logout, user } = useAuth();
@@ -23,7 +23,11 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center gap-2 group" data-testid="navbar-logo">
-            <Car className="w-6 h-6 text-[#D9F99D] group-hover:drop-shadow-[0_0_8px_rgba(217,249,157,0.5)] transition-all" />
+            <img
+              src="/gd-logo.png"
+              alt="Get Driven"
+              className="w-6 h-6 brand-accent-logo group-hover:drop-shadow-[0_0_8px_rgba(217,249,157,0.5)] transition-all"
+            />
             <span className="font-black text-lg tracking-tight text-white" style={{ fontFamily: 'Chivo, sans-serif' }}>
               GET DRIVEN
             </span>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Car, ArrowRight, Clock, Calculator, BarChart3 } from 'lucide-react';
+import { ArrowRight, Clock, Calculator, BarChart3 } from 'lucide-react';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ export default function LandingPage() {
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-8 opacity-0 animate-fadeInUp" data-testid="landing-logo">
-          <Car className="w-10 h-10 text-[#D9F99D] glow-lime-text" />
+          <img src="/gd-logo.png" alt="Get Driven" className="w-10 h-10 brand-accent-logo" />
           <span className="text-zinc-500 text-sm font-medium tracking-[0.3em] uppercase" style={{ fontFamily: 'Chivo, sans-serif' }}>
             Driver Tools
           </span>

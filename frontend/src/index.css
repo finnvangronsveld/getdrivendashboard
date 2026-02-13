@@ -107,6 +107,10 @@ h1, h2, h3, h4, h5, h6 {
     filter: drop-shadow(0 0 8px rgba(217, 249, 157, 0.4));
 }
 
+.brand-accent-logo {
+    filter: brightness(0) saturate(100%) invert(91%) sepia(23%) saturate(636%) hue-rotate(34deg) brightness(104%) contrast(92%);
+}
+
 .glow-lime-border {
     box-shadow: 0 0 10px rgba(217, 249, 157, 0.15);
 }
