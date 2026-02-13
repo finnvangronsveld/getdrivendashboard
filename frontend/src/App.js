@@ -2,6 +2,7 @@ import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/react";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import Dashboard from "@/pages/Dashboard";
@@ -55,6 +56,7 @@ function App() {
               style: { background: '#0F0F11', border: '1px solid #27272A', color: '#fff' },
             }}
           />
+          <Analytics />
         </div>
       </AuthProvider>
     </BrowserRouter>
