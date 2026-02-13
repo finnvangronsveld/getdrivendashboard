@@ -1,9 +1,24 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Link } from 'react-router-dom';
 import { Trash2, Edit2, Clock, Euro, ChevronDown, ChevronUp, Search, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import CarBrandLogo from '@/components/CarBrandLogo';
+
+const MONTH_NAMES = [
+  'Januari',
+  'Februari',
+  'Maart',
+  'April',
+  'Mei',
+  'Juni',
+  'Juli',
+  'Augustus',
+  'September',
+  'Oktober',
+  'November',
+  'December',
+];
 
 export default function RideHistory() {
   const { axiosAuth } = useAuth();
@@ -12,7 +27,7 @@ export default function RideHistory() {
   const [expandedId, setExpandedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const fetchRides = async () => {
+  const fetchRides = useCallback(async () => {
     try {
       const api = axiosAuth();
       const res = await api.get('/rides');
@@ -22,9 +37,9 @@ export default function RideHistory() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [axiosAuth]);
 
-  useEffect(() => { fetchRides(); }, [axiosAuth]);
+  useEffect(() => { fetchRides(); }, [fetchRides]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Weet je zeker dat je deze rit wilt verwijderen?')) return;
@@ -49,7 +64,6 @@ export default function RideHistory() {
   const totalHours = filtered.reduce((s, r) => s + (r.total_hours || 0), 0);
 
   // Group rides by month (YYYY-MM)
-  const MONTH_NAMES = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
   const groupedByMonth = useMemo(() => {
     const groups = {};
     filtered.forEach(r => {
